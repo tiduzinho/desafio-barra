@@ -521,24 +521,34 @@
             atualizarVisorTimer();
 
             intervaloTimer = setInterval(() => {
-                if (tempoRestante > 0) {
-                    tempoRestante--;
+                tempoRestante--;
+                if (tempoRestante <= 0) {
+                    tempoRestante = 0;
                     atualizarVisorTimer();
-                } else {
                     finalizarDescansoAutomatico();
+                } else {
+                    atualizarVisorTimer();
                 }
             }, 1000);
         }
 
         function finalizarDescansoAutomatico() {
-            tocarAlerta();
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification("Desafio VV", {
-                    body: "Hora da próxima série! Vá e vença!",
-                    icon: "https://cdn-icons-png.flaticon.com/512/10/10699.png" // Ícone genérico de sino/barra
-                });
-            }
+            // Primeiro paramos o timer e avançamos a UI para evitar atrasos
             pularDescanso();
+            
+            // Depois acionamos os alertas secundários (som e notificação)
+            tocarAlerta();
+            
+            try {
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification("Desafio VV", {
+                        body: "Hora da próxima série! Vá e vença!",
+                        icon: "https://cdn-icons-png.flaticon.com/512/10/10699.png"
+                    });
+                }
+            } catch (e) {
+                console.log("Erro ao disparar notificação.");
+            }
         }
 
         function atualizarVisorTimer() {
