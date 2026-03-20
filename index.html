@@ -366,21 +366,16 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime); // Aumentado o volume inicial
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5); // Mais longo (1.5s)
-
-                oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 1.5);
-                
-                // Beep triplo
-                setTimeout(() => tocarBeepCurto(880), 600);
-                setTimeout(() => tocarBeepCurto(880), 1200);
+                // Som "trinlinlin" (campainha rápida)
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => tocarBeepCurto(i % 2 === 0 ? 1200 : 1500, 0.1), i * 120);
+                }
             } catch (e) {
                 console.log("Áudio não suportado ou bloqueado pelo navegador.");
             }
         }
 
-        function tocarBeepCurto(frequencia) {
+        function tocarBeepCurto(frequencia, duracao = 0.3) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -390,10 +385,10 @@
                 oscillator.frequency.setValueAtTime(frequencia, audioCtx.currentTime);
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duracao);
                 oscillator.start(audioCtx.currentTime);
-                oscillator.stop(audioCtx.currentTime + 0.3);
+                oscillator.stop(audioCtx.currentTime + duracao);
             } catch (e) {}
         }
 
