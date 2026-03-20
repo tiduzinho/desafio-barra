@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio VV - Barra Fixa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* RESET E VARIÁVEIS DE COR */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .btn, #timer-display { font-family: 'Outfit', sans-serif; }
+
+        :root {
+            --bg-color: #0a0a0a; 
+            --card-bg: rgba(30, 30, 30, 0.7);
+            --green-accent: #00e676; 
+            --orange-accent: #ff6d00; 
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 100%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen {
+            width: 100%;
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h1 { color: var(--green-accent); font-weight: 900; margin-bottom: 10px; font-size: 28px; }
+        h2 { font-size: 22px; margin-bottom: 15px; }
+        p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 18px;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            border: 2px solid var(--glass-border);
+            background-color: rgba(0,0,0,0.3);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="number"]:focus {
+            border-color: var(--green-accent);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 15px;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-green { 
+            background: linear-gradient(135deg, #00e676, #00c853); 
+            color: #000; 
+        }
+        .btn-green:hover { filter: brightness(1.1); box-shadow: 0 6px 20px rgba(0, 230, 118, 0.3); }
+
+        .btn-orange { 
+            background: linear-gradient(135deg, #ff6d00, #e65100); 
+            color: #fff; 
+        }
+        .btn-orange:hover { filter: brightness(1.1); box-shadow: 0 6px 20px rgba(255, 109, 0, 0.3); }
+
+        .btn-outline { 
+            background-color: rgba(255,255,255,0.05); 
+            border: 1px solid var(--glass-border); 
+            color: var(--text-muted); 
+            backdrop-filter: blur(5px);
+        }
+        .btn-outline:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
+
+        .btn:disabled { 
+            background: #222; 
+            border: 1px solid #333; 
+            color: #555; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(12px);
+            width: 100%;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--glass-border);
+            border-left: 6px solid var(--green-accent);
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* ESTILOS DO TREINO E CRONÓMETRO */
+        .serie-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+            font-size: 18px;
+        }
+        .serie-item:last-child { border-bottom: none; }
+        .serie-item.concluida { color: var(--text-muted); text-decoration: line-through; }
+        .serie-item.ativa { font-weight: bold; color: var(--green-accent); }
+
+        #timer-container {
+            display: none;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid var(--orange-accent);
+            text-align: center;
+        }
+        #timer-display { font-size: 48px; font-weight: 900; color: var(--orange-accent); margin: 10px 0; }
+
+        /* ESTILOS DE HISTÓRICO */
+        .historico-item {
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .historico-rep {
+            color: var(--green-accent);
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .chart-container {
+            width: 100%;
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* INPUT ÚLTIMA SÉRIE */
+        #area-registro-final {
+            display: none;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 20px;
+            border: 2px solid var(--green-accent);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <div id="screen-onboarding" class="screen">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><path d="M6 5v14M18 5v14M2 7h4M2 17h4M18 7h4M18 17h4M6 12h12"/></svg>
+            <h2>TESTE DE NIVELAMENTO</h2>
+            <p>Qual o seu limite atual na barra fixa em padrão estrito?<br><br>O queixo deve passar a barra e os braços estenderem totalmente na descida.</p>
+            <input type="number" id="input-barras" placeholder="Ex: 8" min="0">
+            <button class="btn btn-green" onclick="salvarNivelamento()">Registrar Nível</button>
+        </div>
+
+        <div id="screen-home" class="screen">
+            <h1>VÁ E VENÇA!</h1>
+            <div class="card">
+                <h2 id="display-ciclo" style="margin-bottom: 5px;">Ciclo Atual</h2>
+                <p id="display-dia" style="color: white; font-size: 16px; margin-bottom: 0;">Dia do Treino: 1</p>
+            </div>
+            
+            <button id="btn-iniciar-treino" class="btn btn-orange" onclick="prepararTreino()">INICIAR TREINO DE HOJE</button>
+            <button class="btn btn-outline" onclick="mostrarHistorico()">VER HISTÓRICO E GRÁFICO</button>
+            
+            <div style="margin-top: auto; width: 100%;">
+                <button class="btn btn-outline" onclick="resetarApp()">Refazer Teste (Limpar Dados)</button>
+            </div>
+        </div>
+
+        <div id="screen-treino" class="screen">
+            <h2 id="titulo-treino" style="color: var(--orange-accent);">DIA 1</h2>
+            
+            <div id="timer-container">
+                <p style="margin:0;">Descanso Entre Séries</p>
+                <div id="timer-display">02:00</div>
+                <button id="btn-pular-descanso" class="btn btn-outline" style="padding: 10px; margin-bottom:0;" onclick="pularDescanso()">Pular Descanso</button>
+            </div>
+
+            <div class="card" id="lista-series"></div>
+
+            <div id="area-acao-treino" style="width: 100%;">
+                <button id="btn-concluir-serie" class="btn btn-green" onclick="concluirSerieAtual()">Concluir Série 1</button>
+            </div>
+
+            <div id="area-registro-final">
+                <h3 style="margin-bottom:15px;">Quantas repetições você fez na Série 5?</h3>
+                <p id="label-meta" style="color: var(--text-muted); font-size: 13px; margin-bottom:10px;">A meta era no mínimo 6.</p>
+                <div style="position: relative; width: 100%;">
+                    <input type="number" id="input-reps-final" placeholder="0">
+                </div>
+                <button class="btn btn-orange" onclick="finalizarDia()">Registrar Séries e Finalizar</button>
+            </div>
+
+            <button class="btn btn-outline" onclick="navegarPara('screen-home')" style="margin-top: 15px;">Abortar Treino</button>
+        </div>
+
+        <div id="screen-transicao" class="screen">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ef6c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+            <h1 style="color: var(--orange-accent);">MISSÃO CUMPRIDA!</h1>
+            <h2 style="font-size: 18px;">Você finalizou este ciclo com sucesso.</h2>
+            
+            <div class="card" style="border-left-color: var(--orange-accent); margin-top: 10px;">
+                <p style="color: white; margin-bottom: 10px; font-weight: bold;">Próximos Passos (Regra do Manual):</p>
+                <p style="margin-bottom: 5px;"><strong>1.</strong> Descanso profundo obrigatório de 48 horas.</p>
+                <p style="margin-bottom: 5px;"><strong>2.</strong> Realizar um novo Teste de Nivelamento.</p>
+                <p style="margin-bottom: 0;"><strong>3.</strong> Descansar mais 48 horas antes de iniciar o novo ciclo.</p>
+            </div>
+
+            <p>O ganho de força real acontece na recuperação. A aplicação vai gerir o calendário para você.</p>
+
+            <button class="btn btn-orange" onclick="navegarPara('screen-home')">Compreendido (Voltar à Base)</button>
+        </div>
+
+        <div id="screen-historico" class="screen">
+            <h1>EVOLUÇÃO</h1>
+            <div class="chart-container">
+                <canvas id="evolucaoChart"></canvas>
+            </div>
+            <div id="lista-historico" style="width: 100%; max-height: 300px; overflow-y: auto;">
+                <!-- Itens de histórico aqui -->
+            </div>
+            <button class="btn btn-outline" onclick="navegarPara('screen-home')" style="margin-top: 20px;">Voltar</button>
+        </div>
+
+    </div>
+
+    <script>
+        // BANCO DE DADOS DOS CICLOS
+        const dbCiclos = {
+            "Ciclo 3 (6 a 8 Barras)": [
+                { dia: 1, series: [2, 3, 2, 2], minSerie5: 3, descansoDias: 1 },
+                { dia: 2, series: [2, 3, 2, 2], minSerie5: 4, descansoDias: 1 },
+                { dia: 3, series: [3, 4, 2, 2], minSerie5: 4, descansoDias: 2 },
+                { dia: 4, series: [3, 4, 3, 3], minSerie5: 4, descansoDias: 1 },
+                { dia: 5, series: [3, 5, 3, 3], minSerie5: 5, descansoDias: 1 },
+                { dia: 6, series: [4, 5, 4, 4], minSerie5: 6, descansoDias: 2 }
+            ],
+            "Ciclo 4 (9 a 11 Barras)": [
+                { dia: 1, series: [3, 5, 3, 3], minSerie5: 5, descansoDias: 1 },
+                { dia: 2, series: [4, 6, 4, 4], minSerie5: 6, descansoDias: 1 },
+                { dia: 3, series: [5, 7, 5, 5], minSerie5: 6, descansoDias: 2 },
+                { dia: 4, series: [5, 8, 5, 5], minSerie5: 8, descansoDias: 1 },
+                { dia: 5, series: [6, 9, 6, 6], minSerie5: 8, descansoDias: 1 },
+                { dia: 6, series: [6, 9, 6, 6], minSerie5: 10, descansoDias: 2 }
+            ],
+            "Ciclo 5 (12 a 15 Barras)": [
+                { dia: 1, series: [6, 8, 6, 6], minSerie5: 8, descansoDias: 1 },
+                { dia: 2, series: [6, 9, 6, 6], minSerie5: 9, descansoDias: 1 },
+                { dia: 3, series: [7, 10, 6, 6], minSerie5: 9, descansoDias: 2 },
+                { dia: 4, series: [7, 10, 7, 7], minSerie5: 10, descansoDias: 1 },
+                { dia: 5, series: [8, 11, 8, 8], minSerie5: 10, descansoDias: 1 },
+                { dia: 6, series: [9, 11, 9, 9], minSerie5: 11, descansoDias: 2 }
+            ],
+            "Ciclo 6 (16 a 20 Barras)": [
+                { dia: 1, series: [8, 11, 8, 8], minSerie5: 10, descansoDias: 1 },
+                { dia: 2, series: [9, 12, 9, 9], minSerie5: 11, descansoDias: 1 },
+                { dia: 3, series: [9, 13, 9, 9], minSerie5: 12, descansoDias: 2 },
+                { dia: 4, series: [10, 14, 10, 10], minSerie5: 13, descansoDias: 1 },
+                { dia: 5, series: [11, 15, 10, 10], minSerie5: 13, descansoDias: 1 },
+                { dia: 6, series: [11, 15, 11, 11], minSerie5: 13, descansoDias: 2 },
+                { dia: 7, series: [12, 16, 11, 11], minSerie5: 15, descansoDias: 1 },
+                { dia: 8, series: [12, 16, 12, 12], minSerie5: 16, descansoDias: 1 },
+                { dia: 9, series: [13, 17, 13, 13], minSerie5: 16, descansoDias: 2 }
+            ],
+            "Ciclo 7 (21 a 25 Barras)": [
+                { dia: 1, series: [12, 16, 12, 12], minSerie5: 15, descansoDias: 1 },
+                { dia: 2, series: [13, 16, 12, 12], minSerie5: 16, descansoDias: 1 },
+                { dia: 3, series: [13, 17, 13, 13], minSerie5: 16, descansoDias: 2 },
+                { dia: 4, series: [14, 19, 13, 13], minSerie5: 18, descansoDias: 1 },
+                { dia: 5, series: [14, 19, 14, 14], minSerie5: 19, descansoDias: 1 },
+                { dia: 6, series: [15, 20, 14, 14], minSerie5: 20, descansoDias: 2 },
+                { dia: 7, series: [16, 20, 16, 16], minSerie5: 20, descansoDias: 1 },
+                { dia: 8, series: [16, 21, 16, 16], minSerie5: 20, descansoDias: 1 },
+                { dia: 9, series: [20, 28, 20, 20], minSerie5: 28, descansoDias: 2 }
+            ]
+        };
+
+        // VARIÁVEIS GLOBAIS
+        let serieAtual = 1;
+        let tempoRestante = 120; 
+        let intervaloTimer = null;
+        let metaUltimaSerie = 0;
+        let loopBloqueioDiario = null; 
+        let chartInstancia = null;
+
+        window.onload = function() {
+            verificarProgresso();
+            solicitarPermissaoNotificacao();
+        };
+
+        function solicitarPermissaoNotificacao() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
+        function tocarAlerta() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime); // Aumentado o volume inicial
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5); // Mais longo (1.5s)
+
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 1.5);
+                
+                // Beep triplo
+                setTimeout(() => tocarBeepCurto(880), 600);
+                setTimeout(() => tocarBeepCurto(880), 1200);
+            } catch (e) {
+                console.log("Áudio não suportado ou bloqueado pelo navegador.");
+            }
+        }
+
+        function tocarBeepCurto(frequencia) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequencia, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        function verificarProgresso() {
+            const progressoSalvo = localStorage.getItem('vv_progresso');
+            if (progressoSalvo) {
+                const dados = JSON.parse(progressoSalvo);
+                
+                // Ajusta os textos da Home baseado no status
+                if (dados.status === 'aguardando_teste') {
+                    document.getElementById('display-ciclo').innerText = "🏆 Ciclo Concluído";
+                    document.getElementById('display-dia').innerText = "Aguardando novo teste";
+                } else {
+                    document.getElementById('display-ciclo').innerText = dados.ciclo_atual;
+                    document.getElementById('display-dia').innerText = "Dia do Treino: " + dados.dia_atual;
+                }
+                
+                gerirBloqueio(dados);
+                navegarPara('screen-home');
+            } else {
+                navegarPara('screen-onboarding');
+            }
+        }
+
+        function gerirBloqueio(dados) {
+            const btnIniciar = document.getElementById('btn-iniciar-treino');
+            if(loopBloqueioDiario) clearInterval(loopBloqueioDiario);
+
+            const verificarTempo = () => {
+                const agora = Date.now();
+                
+                if (dados.data_desbloqueio && agora < dados.data_desbloqueio) {
+                    btnIniciar.disabled = true;
+                    btnIniciar.classList.remove('btn-orange');
+                    
+                    const restoMs = dados.data_desbloqueio - agora;
+                    const horas = Math.floor(restoMs / (1000 * 60 * 60));
+                    const minutos = Math.floor((restoMs % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    btnIniciar.innerText = `RECUPERAÇÃO: ${horas}h ${minutos}m`;
+                } else {
+                    btnIniciar.disabled = false;
+                    btnIniciar.classList.add('btn-orange');
+                    
+                    // Define a ação do botão baseada no status
+                    if (dados.status === 'aguardando_teste') {
+                        btnIniciar.innerText = "FAZER NOVO TESTE";
+                        btnIniciar.onclick = () => navegarPara('screen-onboarding');
+                    } else {
+                        btnIniciar.innerText = "INICIAR TREINO DE HOJE";
+                        btnIniciar.onclick = () => prepararTreino();
+                    }
+                    if(loopBloqueioDiario) clearInterval(loopBloqueioDiario);
+                }
+            };
+
+            verificarTempo(); 
+            loopBloqueioDiario = setInterval(verificarTempo, 60000); 
+        }
+
+        function salvarNivelamento() {
+            const input = document.getElementById('input-barras').value;
+            const reps = parseInt(input);
+            if (isNaN(reps) || reps < 0) return alert("Por favor, digite um número válido.");
+
+            let cicloDefinido = "";
+            if (reps >= 6 && reps <= 8) cicloDefinido = "Ciclo 3 (6 a 8 Barras)";
+            else if (reps >= 9 && reps <= 11) cicloDefinido = "Ciclo 4 (9 a 11 Barras)";
+            else if (reps >= 12 && reps <= 15) cicloDefinido = "Ciclo 5 (12 a 15 Barras)";
+            else if (reps >= 16 && reps <= 20) cicloDefinido = "Ciclo 6 (16 a 20 Barras)";
+            else if (reps >= 21) cicloDefinido = "Ciclo 7 (21 a 25 Barras)";
+            else return alert("Insira um valor igual ou superior a 6 para testar os ciclos mapeados.");
+
+            // Verifica se o usuário está vindo de um ciclo concluído (para aplicar os 2 dias extras de descanso)
+            let progressoAntigo = JSON.parse(localStorage.getItem('vv_progresso'));
+            let aplicarDescansoPosTeste = (progressoAntigo && progressoAntigo.status === 'aguardando_teste');
+
+            const meuProgresso = { 
+                ciclo_atual: cicloDefinido, 
+                dia_atual: 1, 
+                status: 'treinando',
+                data_desbloqueio: aplicarDescansoPosTeste ? Date.now() + (48 * 60 * 60 * 1000) : null,
+                historico: progressoAntigo ? (progressoAntigo.historico || []) : []
+            };
+            
+            localStorage.setItem('vv_progresso', JSON.stringify(meuProgresso));
+            document.getElementById('input-barras').value = ""; // Limpa o input
+            verificarProgresso();
+        }
+
+        function prepararTreino() {
+            const dados = JSON.parse(localStorage.getItem('vv_progresso'));
+            const diasDoCiclo = dbCiclos[dados.ciclo_atual];
+            const treinoDeHoje = diasDoCiclo[dados.dia_atual - 1];
+
+            document.getElementById('titulo-treino').innerText = "TREINO - DIA " + dados.dia_atual;
+            metaUltimaSerie = treinoDeHoje.minSerie5; 
+
+            let htmlSeries = "";
+            for(let i = 0; i < 4; i++) {
+                htmlSeries += `<div class="serie-item ${i === 0 ? 'ativa' : ''}" id="serie-${i+1}"><span>Série ${i+1}</span> <span>${treinoDeHoje.series[i]} reps</span></div>`;
+            }
+            htmlSeries += `<div class="serie-item" id="serie-5"><span>Série 5</span> <span>Máx (Mín ${metaUltimaSerie})</span></div>`;
+            
+            document.getElementById('lista-series').innerHTML = htmlSeries;
+            
+            serieAtual = 1;
+            document.getElementById('btn-concluir-serie').innerText = "Concluir Série 1";
+            document.getElementById('btn-concluir-serie').style.display = "block";
+            document.getElementById('timer-container').style.display = "none";
+            document.getElementById('area-registro-final').style.display = "none";
+            document.getElementById('area-acao-treino').style.display = "block";
+            
+            navegarPara('screen-treino');
+        }
+
+        function concluirSerieAtual() {
+            const divSerie = document.getElementById(`serie-${serieAtual}`);
+            divSerie.classList.remove('ativa');
+            divSerie.classList.add('concluida');
+
+            if (serieAtual < 5) iniciarDescanso();
+            else finalizarDia();
+        }
+
+        function iniciarDescanso() {
+            document.getElementById('btn-concluir-serie').style.display = "none";
+            document.getElementById('timer-container').style.display = "block";
+            tempoRestante = 120; 
+            atualizarVisorTimer();
+
+            intervaloTimer = setInterval(() => {
+                if (tempoRestante > 0) {
+                    tempoRestante--;
+                    atualizarVisorTimer();
+                } else {
+                    finalizarDescansoAutomatico();
+                }
+            }, 1000);
+        }
+
+        function finalizarDescansoAutomatico() {
+            tocarAlerta();
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Desafio VV", {
+                    body: "Hora da próxima série! Vá e vença!",
+                    icon: "https://cdn-icons-png.flaticon.com/512/10/10699.png" // Ícone genérico de sino/barra
+                });
+            }
+            pularDescanso();
+        }
+
+        function atualizarVisorTimer() {
+            const minutos = Math.floor(tempoRestante / 60).toString().padStart(2, '0');
+            const segundos = (tempoRestante % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${minutos}:${segundos}`;
+        }
+
+        function pularDescanso() {
+            clearInterval(intervaloTimer);
+            document.getElementById('timer-container').style.display = "none";
+            
+            serieAtual++;
+            const divProxima = document.getElementById(`serie-${serieAtual}`);
+            if(divProxima) divProxima.classList.add('ativa');
+
+            const btnAcao = document.getElementById('btn-concluir-serie');
+            
+            if (serieAtual === 5) {
+                document.getElementById('area-acao-treino').style.display = "none";
+                document.getElementById('area-registro-final').style.display = "block";
+                document.getElementById('label-meta').innerText = `A meta é no mínimo ${metaUltimaSerie} repetições.`;
+                document.getElementById('input-reps-final').value = "";
+                document.getElementById('input-reps-final').focus();
+            } else {
+                btnAcao.style.display = "block";
+                btnAcao.innerText = `Concluir Série ${serieAtual}`;
+            }
+        }
+
+        function finalizarDia() {
+            const inputReps = document.getElementById('input-reps-final').value;
+            const repsFeitas = parseInt(inputReps);
+            
+            if (isNaN(repsFeitas) || repsFeitas < 0) return alert("Por favor, insira um número válido.");
+            
+            const dados = JSON.parse(localStorage.getItem('vv_progresso'));
+            const cicloTotalDias = dbCiclos[dados.ciclo_atual].length;
+
+            // Registrar no histórico
+            if (!dados.historico) dados.historico = [];
+            dados.historico.push({
+                data: new Date().toLocaleDateString('pt-BR'),
+                ciclo: dados.ciclo_atual,
+                dia: dados.dia_atual,
+                reps: repsFeitas,
+                meta: metaUltimaSerie
+            });
+
+            if (repsFeitas >= metaUltimaSerie) {
+                // VERIFICA SE É O ÚLTIMO DIA DO CICLO
+                if (dados.dia_atual === cicloTotalDias) {
+                    dados.status = 'aguardando_teste';
+                    dados.data_desbloqueio = Date.now() + (48 * 60 * 60 * 1000); // 48h de descanso pré-teste
+                    localStorage.setItem('vv_progresso', JSON.stringify(dados));
+                    navegarPara('screen-transicao'); 
+                    return; 
+                }
+
+                // Dia normal de treino
+                const treinoDeHoje = dbCiclos[dados.ciclo_atual][dados.dia_atual - 1];
+                const horasDescanso = treinoDeHoje.descansoDias * 24;
+                dados.data_desbloqueio = Date.now() + (horasDescanso * 60 * 60 * 1000);
+                dados.dia_atual += 1; 
+                
+                alert(`MUITO BEM! Seu treino foi um sucesso.\nDescanse os próximos ${treinoDeHoje.descansoDias} dia(s) obrigatório(s).`);
+            } else {
+                // FALHA
+                dados.data_desbloqueio = Date.now() + (48 * 60 * 60 * 1000);
+                alert(`Você fez ${repsFeitas}. A meta era ${metaUltimaSerie}.\nMantenha o foco. Descanse 48h e tente este mesmo dia novamente.`);
+            }
+
+            localStorage.setItem('vv_progresso', JSON.stringify(dados));
+            verificarProgresso(); 
+        }
+
+        function mostrarHistorico() {
+            renderizarHistorico();
+            renderizarGrafico();
+            navegarPara('screen-historico');
+        }
+
+        function renderizarHistorico() {
+            const dados = JSON.parse(localStorage.getItem('vv_progresso'));
+            const lista = document.getElementById('lista-historico');
+            if (!dados || !dados.historico || dados.historico.length === 0) {
+                lista.innerHTML = "<p style='margin-top:20px;'>Nenhum treino registrado ainda.</p>";
+                return;
+            }
+
+            let html = "";
+            [...dados.historico].reverse().forEach(item => {
+                const sucesso = item.reps >= item.meta;
+                html += `
+                    <div class="historico-item" style="border-left: 4px solid ${sucesso ? 'var(--green-accent)' : '#ff5252'}">
+                        <div style="text-align: left;">
+                            <div style="font-weight: bold;">${item.data} - Dia ${item.dia}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${item.ciclo}</div>
+                        </div>
+                        <div class="historico-rep">${item.reps} <span style="font-size: 10px; color: #888;">/${item.meta}</span></div>
+                    </div>
+                `;
+            });
+            lista.innerHTML = html;
+        }
+
+        function renderizarGrafico() {
+            const dados = JSON.parse(localStorage.getItem('vv_progresso'));
+            if (!dados || !dados.historico || dados.historico.length === 0) return;
+
+            const ctx = document.getElementById('evolucaoChart').getContext('2d');
+            
+            const labels = dados.historico.map(h => h.data);
+            const valores = dados.historico.map(h => h.reps);
+            const metas = dados.historico.map(h => h.meta);
+
+            if (chartInstancia) chartInstancia.destroy();
+
+            chartInstancia = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Repetições Máximas',
+                        data: valores,
+                        borderColor: '#00e676',
+                        backgroundColor: 'rgba(0, 230, 118, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }, {
+                        label: 'Meta Mínima',
+                        data: metas,
+                        borderColor: '#ef6c00',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } },
+                        x: { grid: { display: false }, ticks: { color: '#aaa' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function resetarApp() {
+            if(confirm("Tem certeza de que deseja apagar seu progresso e limpar todos os bloqueios?")) {
+                localStorage.removeItem('vv_progresso');
+                if(loopBloqueioDiario) clearInterval(loopBloqueioDiario);
+                document.getElementById('input-barras').value = "";
+                verificarProgresso();
+            }
+        }
+
+        function navegarPara(idTelaDestino) {
+            document.querySelectorAll('.screen').forEach(tela => tela.classList.remove('active'));
+            document.getElementById(idTelaDestino).classList.add('active');
+        }
+    </script>
+</body>
+</html>
